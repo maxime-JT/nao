@@ -257,12 +257,12 @@ describe('referencing other stories', () => {
 
 		for (const storyId of largeStoryIds.slice(0, 5)) {
 			expect(text).toContain(
-				`<referenced-story id="${storyId}" title="${storyId}" author="Owner" format="classic" version="1">`,
+				`<referenced-story id="${storyId}" title="${storyId}" author="Owner" format="classic" editable="true" version="1">`,
 			);
 		}
 		expect(text).toContain('Read these ones under /story-library/<id>/');
 		expect(text).toContain(
-			`<referenced-story id="story-large-f" title="story-large-f" author="Owner" format="classic" />`,
+			`<referenced-story id="story-large-f" title="story-large-f" author="Owner" format="classic" editable="true" />`,
 		);
 	});
 
@@ -363,7 +363,7 @@ describe('referencing other stories', () => {
 			'-- query_id: query_revenue\n-- database_id: warehouse\nselect month, sum(amount) from orders group by 1\n',
 		);
 		expect(await readStoryLibraryFile(MEMBER_SCOPE, `/story-library/${CERTIFIED_STORY}/story.yaml`)).toContain(
-			'title: "Monthly revenue"\nauthor: "Owner"\nformat: "classic"\npinned: false\ncertified: true\nversion: 2',
+			'title: "Monthly revenue"\nauthor: "Owner"\nformat: "classic"\npinned: false\ncertified: true\neditable: false\nversion: 2',
 		);
 	});
 

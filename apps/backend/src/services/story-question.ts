@@ -8,7 +8,7 @@ import type { LinkedStory, QueryResult } from '../types/tools';
 
 type MessageLike = Omit<UIMessage, 'id'>;
 
-/** The story a quick question is about, editable from it by the story's owner only. */
+/** The story a quick question is about, editable from it by the users who can edit the story. */
 export async function resolveLinkedStory(chat: {
 	userId: string;
 	projectId: string;
@@ -27,7 +27,7 @@ export async function resolveLinkedStory(chat: {
 		slug: story.slug,
 		title: story.title,
 		format: story.format,
-		canEdit: story.ownerId === chat.userId,
+		canEdit: story.canEdit,
 	};
 }
 
