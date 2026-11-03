@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
 	assertProjectCloudBillingAccess: vi.fn(),
-	assignChatToStory: vi.fn(),
+	claimStandaloneStoryChat: vi.fn(),
 	createCustomStory: vi.fn(),
 	createForkedChat: vi.fn(),
 	deleteChat: vi.fn(),
@@ -49,7 +49,7 @@ vi.mock('../src/queries/shared-story.queries', () => ({
 	getSharedStoryByStoryId: mocks.getSharedStoryByStoryId,
 }));
 vi.mock('../src/queries/story.queries', () => ({
-	assignChatToStory: mocks.assignChatToStory,
+	claimStandaloneStoryChat: mocks.claimStandaloneStoryChat,
 	createCustomStory: mocks.createCustomStory,
 	createStoryVersion: mocks.createStoryVersion,
 	getLatestVersionByStoryId: mocks.getLatestVersionByStoryId,
@@ -372,6 +372,7 @@ describe('fork of any accessible Story', () => {
 
 	it('gives a standalone Story of the user a chat first, so the quick question can edit it', async () => {
 		mocks.getReferenceableStory.mockResolvedValue(createReferenceableStory({ chatId: null, ownerId: 'user-id' }));
+		mocks.claimStandaloneStoryChat.mockResolvedValue(true);
 		mocks.createForkedChat
 			.mockResolvedValueOnce({ id: 'story-chat-id' })
 			.mockResolvedValueOnce({ id: 'question-id' });
@@ -381,7 +382,7 @@ describe('fork of any accessible Story', () => {
 			hasAttachedStoryChat: true,
 		});
 
-		expect(mocks.assignChatToStory).toHaveBeenCalledWith('story-id', 'story-chat-id');
+		expect(mocks.claimStandaloneStoryChat).toHaveBeenCalledWith('story-id', 'story-chat-id');
 		expect(mocks.createForkedChat).toHaveBeenLastCalledWith(
 			expect.objectContaining({ forkMetadata: expect.objectContaining({ type: 'story_question' }) }),
 			[],
@@ -395,7 +396,7 @@ describe('fork of any accessible Story', () => {
 			chatId: 'fork-chat-id',
 			hasAttachedStoryChat: false,
 		});
-		expect(mocks.assignChatToStory).not.toHaveBeenCalled();
+		expect(mocks.claimStandaloneStoryChat).not.toHaveBeenCalled();
 	});
 });
 

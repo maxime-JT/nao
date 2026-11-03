@@ -23,6 +23,7 @@ export async function resolveLinkedStory(chat: {
 	}
 	return {
 		storyId: story.storyId,
+		slug: story.slug,
 		chatId: story.chatId,
 		title: story.title,
 		format: story.format,
