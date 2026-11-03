@@ -325,7 +325,6 @@ function ClassicStoryViewer({ chatId, storySlug, isReadonlyMode: readonlyProp, i
 		(versionNumber: number) => exitGuard.requestExit(() => goToVersion(versionNumber)),
 		[exitGuard, goToVersion],
 	);
-	const versionDates = useMemo(() => versions.map((version) => version.createdAt), [versions]);
 
 	useEffect(() => {
 		if (viewMode !== 'code') {
@@ -398,7 +397,7 @@ function ClassicStoryViewer({ chatId, storySlug, isReadonlyMode: readonlyProp, i
 				viewMode={viewMode}
 				onViewModeChange={transitions.requestViewMode}
 				currentVersion={currentVersionNumber}
-				versionDates={versionDates}
+				versions={versions}
 				versionNumber={currentVersion?.version}
 				versionDate={currentVersion?.createdAt}
 				onSelectVersion={handleSelectVersion}

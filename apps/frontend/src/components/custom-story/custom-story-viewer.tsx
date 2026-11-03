@@ -132,7 +132,7 @@ export function CustomStoryViewer({ chatId, storySlug }: CustomStoryViewerProps)
 				viewMode={viewMode}
 				onViewModeChange={setViewMode}
 				currentVersion={story.currentVersionIndex}
-				versionDates={story.versionDates}
+				versions={story.versions}
 				versionNumber={story.viewedVersion ?? undefined}
 				versionDate={story.viewedVersionDate}
 				onSelectVersion={story.goToVersion}

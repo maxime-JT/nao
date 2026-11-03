@@ -113,7 +113,7 @@ export function CustomStoryPreviewPage({ chatId, storySlug, authorName }: Custom
 				viewModeControls={{ viewMode, onViewModeChange: setViewMode }}
 				versionControls={{
 					currentVersion: story.currentVersionIndex,
-					versionDates: story.versionDates,
+					versions: story.versions,
 					versionDate: story.viewedVersionDate,
 					isViewingLatest: story.isViewingLatest,
 					onSelectVersion: story.goToVersion,

@@ -20,6 +20,7 @@ import type { StoryViewMode } from './story-viewer.types';
 import type { StoryRefreshFailure } from '@/components/story-page-header';
 import type { StoryDownloadOptions } from '@/components/story-download';
 import type { CustomStoryViewModeControls } from '@/components/custom-story/custom-story-view-mode';
+import type { StoryVersionEntry } from '@/components/story-version-nav';
 import { CustomStoryViewModeToggle, isCustomStoryViewMode } from '@/components/custom-story/custom-story-view-mode';
 import { useMentionedStoriesContext } from '@/contexts/mentioned-stories';
 import { useEffectiveUserGroupFeatures } from '@/hooks/use-effective-user-group-features';
@@ -63,7 +64,7 @@ interface StoryHeaderBaseProps {
 	allStories: StorySummary[];
 	onSwitchStory: (id: string) => void;
 	currentVersion: number;
-	versionDates: (string | Date)[];
+	versions: StoryVersionEntry[];
 	versionNumber?: number;
 	versionDate?: string | Date | null;
 	onSelectVersion: (version: number) => void;
@@ -117,7 +118,7 @@ export const StoryHeader = memo(function StoryHeader({
 	allStories,
 	onSwitchStory,
 	currentVersion,
-	versionDates,
+	versions,
 	versionNumber,
 	versionDate,
 	onSelectVersion,
@@ -225,8 +226,9 @@ export const StoryHeader = memo(function StoryHeader({
 
 	const versionNav = (
 		<StoryVersionNav
+			storyId={storyId}
 			currentVersion={currentVersion}
-			versionDates={versionDates}
+			versions={versions}
 			onSelectVersion={onSelectVersion}
 		/>
 	);
