@@ -9,6 +9,7 @@ import { requestAsk } from '@/stores/ask-bar';
 
 const mocks = vi.hoisted(() => ({
 	askStory: vi.fn(),
+	invalidateQueries: vi.fn(),
 	isAskError: false,
 	queueOrSendMessage: vi.fn(async () => {}),
 	messages: [] as UIMessage[],
@@ -16,10 +17,15 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@tanstack/react-query', () => ({
 	useMutation: () => ({ mutateAsync: mocks.askStory, isPending: false, isError: mocks.isAskError }),
-	useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+	useQueryClient: () => ({ invalidateQueries: mocks.invalidateQueries }),
 }));
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn(), useParams: () => undefined }));
-vi.mock('@/main', () => ({ trpc: { chatFork: { askStory: { mutationOptions: () => ({}) } } } }));
+vi.mock('@/main', () => ({
+	trpc: {
+		chatFork: { askStory: { mutationOptions: () => ({}) } },
+		story: { resolve: { queryKey: (input: unknown) => ['story.resolve', input] } },
+	},
+}));
 vi.mock('@/contexts/agent.provider', () => ({
 	AgentProvider: ({ children }: { children: React.ReactNode }) => children,
 	useAgentContext: () => ({ queueOrSendMessage: mocks.queueOrSendMessage, isRunning: false }),
@@ -118,6 +124,9 @@ describe('StoryAskBar', () => {
 		const { unmount } = render(<StoryAskBar storyId='story-1' isOwner />);
 		ask('Rename the title');
 		await screen.findByText('Quick question');
+		expect(mocks.invalidateQueries).toHaveBeenCalledWith({
+			queryKey: ['story.resolve', { storyId: 'story-1' }],
+		});
 		unmount();
 
 		render(<StoryAskBar storyId='story-1' isOwner />);

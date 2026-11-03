@@ -44,6 +44,7 @@ export function StoryAskBar({
 		});
 		if (hasAttachedStoryChat) {
 			handOverQuestion(storyId, { chatId, selection });
+			void queryClient.invalidateQueries({ queryKey: trpc.story.resolve.queryKey({ storyId }) });
 		}
 		return chatId;
 	};
