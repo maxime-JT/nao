@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StoryAskBar } from './story-ask-bar';
 import type { UIMessage } from '@nao/backend/chat';
 
-import { requestAsk } from '@/stores/ask-bar';
+import { forgetHandedOverQuestion, requestAsk } from '@/stores/ask-bar';
 
 const mocks = vi.hoisted(() => ({
 	askStory: vi.fn(),
@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
 	isAskError: false,
 	queueOrSendMessage: vi.fn(async () => {}),
 	messages: [] as UIMessage[],
+	isRunning: false,
 }));
 
 vi.mock('@tanstack/react-query', () => ({
@@ -28,7 +29,7 @@ vi.mock('@/main', () => ({
 }));
 vi.mock('@/contexts/agent.provider', () => ({
 	AgentProvider: ({ children }: { children: React.ReactNode }) => children,
-	useAgentContext: () => ({ queueOrSendMessage: mocks.queueOrSendMessage, isRunning: false }),
+	useAgentContext: () => ({ queueOrSendMessage: mocks.queueOrSendMessage, isRunning: mocks.isRunning }),
 	useAgentMessages: () => mocks.messages,
 }));
 vi.mock('@/contexts/set-chat-input-callback', () => ({
@@ -58,6 +59,8 @@ describe('StoryAskBar', () => {
 		vi.clearAllMocks();
 		mocks.messages = [];
 		mocks.isAskError = false;
+		mocks.isRunning = false;
+		forgetHandedOverQuestion('story-1');
 		mocks.askStory.mockResolvedValue({ chatId: 'question-chat', hasAttachedStoryChat: false });
 	});
 
@@ -124,15 +127,39 @@ describe('StoryAskBar', () => {
 		const { unmount } = render(<StoryAskBar storyId='story-1' isOwner />);
 		ask('Rename the title');
 		await screen.findByText('Quick question');
-		expect(mocks.invalidateQueries).toHaveBeenCalledWith({
-			queryKey: ['story.resolve', { storyId: 'story-1' }],
-		});
 		unmount();
 
 		render(<StoryAskBar storyId='story-1' isOwner />);
 
 		expect(screen.getByText('Quick question')).toBeTruthy();
 		expect(screen.getByText('Renamed it')).toBeTruthy();
+	});
+
+	it('replaces the page of a standalone story only once its first answer ends', async () => {
+		mocks.askStory.mockResolvedValue({ chatId: 'question-chat', hasAttachedStoryChat: true });
+		const { rerender } = render(<StoryAskBar storyId='story-1' isOwner />);
+		ask('Rename the title');
+		await screen.findByText('Quick question');
+
+		mocks.isRunning = true;
+		rerender(<StoryAskBar storyId='story-1' isOwner />);
+		expect(mocks.invalidateQueries).not.toHaveBeenCalledWith(STORY_RESOLVE_QUERY);
+
+		mocks.isRunning = false;
+		rerender(<StoryAskBar storyId='story-1' isOwner />);
+		expect(mocks.invalidateQueries).toHaveBeenCalledWith(STORY_RESOLVE_QUERY);
+	});
+
+	it('replaces the page of a standalone story when its question is closed before the answer ends', async () => {
+		mocks.askStory.mockResolvedValue({ chatId: 'question-chat', hasAttachedStoryChat: true });
+		mocks.isRunning = true;
+		render(<StoryAskBar storyId='story-1' isOwner />);
+		ask('Rename the title');
+		await screen.findByText('Quick question');
+
+		fireEvent.click(screen.getByRole('button', { name: 'End this question' }));
+
+		expect(mocks.invalidateQueries).toHaveBeenCalledWith(STORY_RESOLVE_QUERY);
 	});
 
 	it('ignores a request made before it was shown, such as one for another story', () => {
@@ -144,6 +171,8 @@ describe('StoryAskBar', () => {
 		expect(screen.queryByText('A question about another story')).toBeNull();
 	});
 });
+
+const STORY_RESOLVE_QUERY = { queryKey: ['story.resolve', { storyId: 'story-1' }] };
 
 let messageCount = 0;
 

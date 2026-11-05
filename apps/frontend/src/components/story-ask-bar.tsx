@@ -37,16 +37,27 @@ export function StoryAskBar({
 		forgetHandedOverQuestion(storyId);
 	}, [storyId]);
 
+	const [hasAttachedStoryChat, setHasAttachedStoryChat] = useState(false);
+	const refreshStoryPage = () =>
+		queryClient.invalidateQueries({ queryKey: trpc.story.resolve.queryKey({ storyId }) });
+
 	const askStory = async (selection?: AskSelection) => {
-		const { chatId, hasAttachedStoryChat } = await askMutation.mutateAsync({
+		const response = await askMutation.mutateAsync({
 			storyId,
 			selectionText: selection && toSelectionText(selection).slice(0, MAX_SELECTION_TEXT_LENGTH),
 		});
-		if (hasAttachedStoryChat) {
-			handOverQuestion(storyId, { chatId, selection });
-			void queryClient.invalidateQueries({ queryKey: trpc.story.resolve.queryKey({ storyId }) });
+		if (response.hasAttachedStoryChat) {
+			handOverQuestion(storyId, { chatId: response.chatId, selection });
+			setHasAttachedStoryChat(true);
 		}
-		return chatId;
+		return response.chatId;
+	};
+
+	const endQuestion = () => {
+		forgetHandedOverQuestion(storyId);
+		if (hasAttachedStoryChat) {
+			void refreshStoryPage();
+		}
 	};
 
 	return (
@@ -57,9 +68,10 @@ export function StoryAskBar({
 			hasAskFailed={askMutation.isError}
 			resumedQuestion={handedOverQuestion}
 			onAsk={askStory}
-			onEnd={() => forgetHandedOverQuestion(storyId)}
+			onEnd={endQuestion}
 		>
 			<StoryRefreshAfterEdit />
+			{hasAttachedStoryChat && <StoryPageRefreshAfterAnswer onAnswered={refreshStoryPage} />}
 		</AskBar>
 	);
 }
@@ -82,6 +94,28 @@ function StoryRefreshAfterEdit() {
 			queryClient.invalidateQueries({ queryKey });
 		}
 	}, [editedStory, messages, queryClient]);
+
+	return null;
+}
+
+/**
+ * Asking about a standalone story attaches a chat to it, which replaces its page by the owned one.
+ * The page waits for the answer to end, so the running answer keeps streaming in the panel.
+ */
+function StoryPageRefreshAfterAnswer({ onAnswered }: { onAnswered: () => void }) {
+	const { isRunning } = useAgentContext();
+	const wasRunning = useRef(false);
+
+	useEffect(() => {
+		if (isRunning) {
+			wasRunning.current = true;
+			return;
+		}
+		if (wasRunning.current) {
+			wasRunning.current = false;
+			onAnswered();
+		}
+	}, [isRunning, onAnswered]);
 
 	return null;
 }
