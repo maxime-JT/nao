@@ -59,6 +59,7 @@ export function AskBar({
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const request = useAskRequest();
 	const requestIdAtMount = useRef(request?.id);
+	const isFocusRequested = useRef(false);
 
 	useEffect(() => {
 		if (!request || request.id === requestIdAtMount.current) {
@@ -67,8 +68,16 @@ export function AskBar({
 		if (request.chatId || request.selection) {
 			setSession({ chatId: request.chatId, selection: request.selection, isPanelOpen: !!request.chatId });
 		}
-		inputRef.current?.focus();
+		isFocusRequested.current = true;
 	}, [request]);
+
+	useEffect(() => {
+		if (!isFocusRequested.current || isInputHidden) {
+			return;
+		}
+		isFocusRequested.current = false;
+		inputRef.current?.focus();
+	}, [request, isInputHidden]);
 
 	const startSession = async (text: string) => {
 		const chatId = await onAsk(session.selection);

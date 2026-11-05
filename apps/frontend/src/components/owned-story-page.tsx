@@ -23,6 +23,7 @@ import { StoryMapEditProvider } from '@/contexts/story-map-edit';
 import { StoryTableEditProvider } from '@/contexts/story-table-edit';
 import { requestAskAboutSelection } from '@/stores/ask-bar';
 import { useChatActivity } from '@/hooks/use-chat-activity';
+import { useOnAskRequest } from '@/hooks/use-on-ask-request';
 import { useRetryStaleStoryRefresh } from '@/hooks/use-retry-stale-story-refresh';
 import { useStoryPageEditor } from '@/hooks/use-story-page-editor';
 import { useStoryVersionQueryData } from '@/hooks/use-story-version-query-data';
@@ -88,6 +89,7 @@ export function OwnedStoryPage({ chatId, storySlug }: { chatId: string; storySlu
 	const storyTheme = useStoryThemeForCurrentMode(story.theme);
 	const showAskBar = Boolean(storyId) && !isArchived;
 	const isAskInputHidden = editor.viewMode !== 'preview';
+	useOnAskRequest(() => editor.setViewMode('preview'));
 
 	return (
 		<div

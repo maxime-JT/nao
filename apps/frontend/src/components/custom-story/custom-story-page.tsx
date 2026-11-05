@@ -29,6 +29,7 @@ import { LiveStorySettingsDialog } from '@/components/side-panel/live-story-sett
 import { ArchivedBanner } from '@/components/side-panel/story-archived-banner';
 import { StoryPageHeader } from '@/components/story-page-header';
 import { useEffectiveUserGroupFeatures } from '@/hooks/use-effective-user-group-features';
+import { useOnAskRequest } from '@/hooks/use-on-ask-request';
 import { useOpenStandaloneStoryInChat } from '@/hooks/use-open-standalone-story-in-chat';
 import { useRetryStaleStoryRefresh } from '@/hooks/use-retry-stale-story-refresh';
 import { useTrackViewDuration } from '@/hooks/use-track-view-duration';
@@ -86,6 +87,7 @@ export function CustomStoryPreviewPage({ chatId, storySlug, authorName }: Custom
 	useTrackViewDuration({ assetType: 'story', chatId, storyId, versionNumber: story.viewedVersion ?? undefined });
 	const showAskBar = Boolean(storyId) && !story.isArchived;
 	const isAskInputHidden = viewMode !== 'app';
+	useOnAskRequest(() => setViewMode('app'));
 
 	return (
 		<div className='relative flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-background'>
@@ -223,6 +225,7 @@ export function StandaloneCustomStoryPage({ storyId }: { storyId: string }) {
 	useTrackViewDuration({ assetType: 'story', storyId, versionNumber });
 	const isArchived = Boolean(story?.archivedAt);
 	const isAskInputHidden = viewMode !== 'app';
+	useOnAskRequest(() => setViewMode('app'));
 
 	return (
 		<div className='relative flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-background'>
